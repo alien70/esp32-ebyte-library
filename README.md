@@ -1,1 +1,1 @@
-# esp32-ebyte-library
+# EXPRESSIF&reg; ESP-IDF component for EBYTE UART Module usage
