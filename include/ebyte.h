@@ -38,9 +38,9 @@
 #ifndef __EBYTE_H__
 #define __EBYTE_H__
 
-#include "driver/gpio.h"
 #include "driver/uart.h"
 
+// TODO: Eliminare appena finito il primo test completo
 void dummy_task(void *argc);
 
 /**
@@ -57,80 +57,132 @@ typedef enum EOperatingModes
     NORMAL = 0,   // UART and wireless channel are open, transparent transmission is on
     WAKEUP,       // sends a preamble to waken receiver
     POWER_SAVING, // can't transmit but receive works only in wake up mode
-    SLEEP         // Sleep mode, receiving parameter setting command is available
+    PROGRAM       // Sleep mode, receiving parameter setting command is available
 } OperatingModes;
 
 /**
- * @brief Transmission Parity Settins
+ * @brief Transmission parity_t Settins
  * 
  */
-typedef enum EParity
+typedef enum
 {
     _8N1 = 0,
     _8O1,
     _8E1
-} Parity;
+} parity_t;
 
 /**
  * @brief Uart speed setting
  * 
  */
-typedef enum EUartBaudRate
+typedef enum
 {
     _1200 = 0,
     _2400,
     _4800,
-    _9600,  // (default)
+    _9600, // (default)
     _19200,
     _38400,
     _57600,
     _115200
-} UartBaudRate;
+} uart_baud_rate_t;
 
 /**
  * @brief Air frequency settings
  * 
  */
-typedef enum EAirDataRate
+typedef enum
 {
     _1k = 0,
     _2k,
-    _5k,    // (default)
+    _5k, // (default)
     _8k,
     _10k,
     _15k,
     _20k,
     _25k
-} AirDataRate;
+} air_data_rate_t;
 
-typedef struct SPinConfiguration {
+typedef struct
+{
     uint8_t m0_pin;
     uint8_t m1_pin;
     uint8_t txd_pin;
     uint8_t rxd_pin;
     uint8_t aux_pin;
-} PinConfiguration;
+} pin_configuration_t;
 
-PinConfiguration _pin_configuration;
+pin_configuration_t _pin_configuration;
 
+uart_port_t _uart_port;
+
+uint8_t _parameters[6];
+
+/**
+ * @brief Get the m0 pin 
+ * 
+ * @return uint8_t 
+ */
 uint8_t get_m0_pin();
+/**
+ * @brief Set the m0 pin
+ * 
+ * @param value 
+ */
 void set_m0_pin(uint8_t value);
 
+/**
+ * @brief Get the m1 pin
+ * 
+ * @return uint8_t 
+ */
 uint8_t get_m1_pin();
+/**
+ * @brief Set the m1 pin
+ * 
+ * @param value 
+ */
 void set_m1_pin(uint8_t value);
 
+/**
+ * @brief Get the txd pin
+ * 
+ * @return uint8_t 
+ */
 uint8_t get_txd_pin();
+/**
+ * @brief Set the txd pin
+ * 
+ * @param value 
+ */
 void set_txd_pin(uint8_t value);
 
+/**
+ * @brief Get the rxd pin
+ * 
+ * @return uint8_t 
+ */
 uint8_t get_rxd_pin();
+/**
+ * @brief Set the rxd pin
+ * 
+ * @param value 
+ */
 void set_rxd_pin(uint8_t value);
 
 /**
- * @brief Get current operating mode
+ * @brief Get the uart port
  * 
- * @return OperatingModes 
+ * @return uart_port_t 
  */
-OperatingModes get_mode();
+uart_port_t get_uart_port();
+/**
+ * @brief Set the uart port
+ * 
+ * @param value 
+ */
+void set_uart_port(uart_port_t value);
+
 /**
  * @brief Set the new operating mode
  * 
@@ -141,41 +193,41 @@ void set_mode(OperatingModes mode);
 /**
  * @brief Get the parity
  * 
- * @return Parity 
+ * @return parity_t 
  */
-Parity get_parity();
+parity_t get_parity();
 /**
  * @brief Set the parity
  * 
  * @param value 
  */
-void set_parity(Parity value);
+void set_parity(parity_t value);
 
 /**
  * @brief Get the uart baud rate
  * 
- * @return UartBaudRate 
+ * @return uart_baud_rate_t 
  */
-UartBaudRate get_uart_baud_rate();
+uart_baud_rate_t get_uart_baud_rate();
 /**
  * @brief Set the uart baud rate
  * 
  * @param value 
  */
-void set_uart_baud_rate(UartBaudRate value);
+void set_uart_baud_rate(uart_baud_rate_t value);
 
 /**
  * @brief Get the air baud rate
  * 
- * @return AirDataRate 
+ * @return air_data_rate_t 
  */
-AirDataRate get_air_baud_rate();
+air_data_rate_t get_air_baud_rate();
 /**
  * @brief Set the air baud rate
  * 
  * @param value 
  */
-void set_air_baud_rate(AirDataRate value);
+void set_air_baud_rate(air_data_rate_t value);
 
 /**
  * @brief Initialize the lora module with the provided settings
@@ -183,6 +235,6 @@ void set_air_baud_rate(AirDataRate value);
  */
 void ebyte_init();
 
-
+bool read_parameters();
 
 #endif // #ifndef __EBYTE_H__
