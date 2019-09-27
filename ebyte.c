@@ -16,7 +16,7 @@ void dummy_task(void *argc)
     for (;;)
     {
         gpio_set_level(LED, level);
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        vDelay(200);
         level = !level;
     }
 }
@@ -70,6 +70,9 @@ void set_mode(OperatingModes mode)
 {
     gpio_set_level(_pin_configuration.m0_pin, (mode & 0x02) >> 1);
     gpio_set_level(_pin_configuration.m1_pin, (mode & 0x01));
+
+    // waits until aux returns high or 1s
+    complete_task(1000);
 }
 
 parity_t get_parity()
@@ -99,12 +102,55 @@ void set_air_baud_rate(air_data_rate_t value)
 {
 }
 
+uint8_t get_model()
+{
+    return _model_data.model;
+}
+
+uint8_t get_version()
+{
+    return _model_data.version;
+}
+
+uint8_t get_features()
+{
+    return _model_data.features;
+}
+
 void ebyte_init()
 {
 }
 
+bool read_version()
+{
+    // set _parameters to zero
+    memset(_parameters, 0, sizeof(_parameters));
+
+    set_mode(PROGRAM);
+
+    const char c = 0xC3;
+    uart_write_bytes(_uart_port, &c, 1);
+    uart_write_bytes(_uart_port, &c, 1);
+    uart_write_bytes(_uart_port, &c, 1);
+
+    uart_read_bytes(_uart_port, (uint8_t *)&_parameters, sizeof(_parameters), 20 / portTICK_RATE_MS);
+
+    set_mode(NORMAL);
+
+    if (_parameters[0] != 0xC3)
+        return false;
+
+    // Read parameters below
+    _model_data.model = _parameters[1];
+    _model_data.version = _parameters[2];
+    _model_data.features = _parameters[3];
+
+    return true;
+}
+
 bool read_parameters()
 {
+    // set _parameters to zero
     memset(_parameters, 0, sizeof(_parameters));
 
     set_mode(PROGRAM);
@@ -114,12 +160,45 @@ bool read_parameters()
     uart_write_bytes(_uart_port, &c, 1);
     uart_write_bytes(_uart_port, &c, 1);
 
-    uart_read_bytes(_uart_port, (uint8_t*)&_parameters, sizeof(_parameters), 20 / portTICK_RATE_MS);
+    uart_read_bytes(_uart_port, (uint8_t *)&_parameters, sizeof(_parameters), 20 / portTICK_RATE_MS);
 
     set_mode(NORMAL);
 
     if (_parameters[0] != 0xC0)
         return false;
 
+    // Read parameters below
+
     return true;
+}
+
+void vDelay(uint32_t delay)
+{
+    vTaskDelay(delay / portTICK_PERIOD_MS);
+}
+
+/**
+ * @brief Checks AUX pin  for operation completion
+ * 
+ */
+void complete_task(uint32_t delay)
+{
+    vDelay(20);
+
+    TickType_t t0 = xTaskGetTickCount(), delta_t = 0;
+    int _aux = gpio_get_level(_pin_configuration.aux_pin);
+
+    for (;;)
+    {
+        _aux = gpio_get_level(_pin_configuration.aux_pin);
+        delta_t = xTaskGetTickCount() - t0;
+
+        if (_aux || delta_t >= (delay / portTICK_PERIOD_MS))
+            break;
+
+        vDelay(20);
+    }
+
+    // after AUX returns HIGH wait 2ms (20 to be sure)
+    vDelay(20);
 }

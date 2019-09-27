@@ -105,13 +105,30 @@ typedef enum
 
 typedef struct
 {
-    uint8_t m0_pin;
-    uint8_t m1_pin;
-    uint8_t txd_pin;
-    uint8_t rxd_pin;
-    uint8_t aux_pin;
+    int8_t m0_pin;
+    int8_t m1_pin;
+    int8_t txd_pin;
+    int8_t rxd_pin;
+    int8_t aux_pin;
 } pin_configuration_t;
 
+typedef struct
+{
+    uint8_t model;
+    uint8_t version;
+    uint8_t features;
+} model_data_t;
+
+/**
+ * @brief 
+ * 
+ */
+model_data_t _model_data;
+
+/**
+ * @brief 
+ * 
+ */
 pin_configuration_t _pin_configuration;
 
 uart_port_t _uart_port;
@@ -230,11 +247,65 @@ air_data_rate_t get_air_baud_rate();
 void set_air_baud_rate(air_data_rate_t value);
 
 /**
+ * @brief Get the model
+ * 
+ * @return uint8_t 
+ */
+uint8_t get_model();
+
+/**
+ * @brief Get the version
+ * 
+ * @return uint8_t 
+ */
+uint8_t get_version();
+
+/**
+ * @brief Get the features
+ * 
+ * @return uint8_t 
+ */
+uint8_t get_features();
+
+/**
  * @brief Initialize the lora module with the provided settings
  * 
  */
 void ebyte_init();
 
+/**
+ * @brief Read version number
+ * 
+ * @return true 
+ * @return false 
+ */
+bool read_version();
+
+/**
+ * @brief Read the current settings from the module
+ * 
+ * @return true 
+ * @return false 
+ */
 bool read_parameters();
+
+/**
+ * @brief Wait delay in milliseconds
+ * 
+ * @param delay 
+ */
+void vDelay(uint32_t delay);
+
+/**
+ * @brief 
+ * 
+ */
+void complete_task(uint32_t);
+
+/**
+ * @brief Prints the model version data
+ * 
+ */
+void print_version();
 
 #endif // #ifndef __EBYTE_H__
