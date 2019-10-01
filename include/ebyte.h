@@ -61,7 +61,7 @@ typedef enum EOperatingModes
 } OperatingModes;
 
 /**
- * @brief Transmission parity_t Settins
+ * @brief Transmission parity_t Settings
  * 
  */
 typedef enum
@@ -132,6 +132,12 @@ model_data_t _model_data;
 pin_configuration_t _pin_configuration;
 
 uart_port_t _uart_port;
+uart_baud_rate_t _baud_rate;
+parity_t _parity;
+air_data_rate_t _air_data_rate;
+
+int _rx_buffer_size;
+int _tx_buffer_size;
 
 uint8_t _parameters[6];
 
@@ -186,6 +192,19 @@ uint8_t get_rxd_pin();
  * @param value 
  */
 void set_rxd_pin(uint8_t value);
+
+/**
+ * @brief Get the aux pin
+ * 
+ * @param value 
+ */
+void set_aux_pin(uint8_t value);
+/**
+ * @brief Get the aux pin
+ * 
+ * @return uint8_t 
+ */
+uint8_t get_aux_pin();
 
 /**
  * @brief Get the uart port
