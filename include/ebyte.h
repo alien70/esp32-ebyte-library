@@ -38,6 +38,8 @@
 #ifndef __EBYTE_H__
 #define __EBYTE_H__
 
+// #define _DEBUG
+
 #include "driver/uart.h"
 
 // TODO: Eliminare appena finito il primo test completo
@@ -135,6 +137,14 @@ uart_port_t _uart_port;
 uart_baud_rate_t _baud_rate;
 parity_t _parity;
 air_data_rate_t _air_data_rate;
+
+uint16_t _address;
+
+uint8_t _channel;
+
+uint8_t _option;
+
+bool _save_on_power_down;
 
 int _rx_buffer_size;
 int _tx_buffer_size;
@@ -290,7 +300,7 @@ uint8_t get_features();
  * @brief Initialize the lora module with the provided settings
  * 
  */
-void ebyte_init();
+bool ebyte_init();
 
 /**
  * @brief Read version number
@@ -326,5 +336,12 @@ void complete_task(uint32_t);
  * 
  */
 void print_version();
+
+/**
+ * @brief Evaluates uart configuration structure
+ * 
+ * @return int 
+ */
+uart_config_t eval_uart_config();
 
 #endif // #ifndef __EBYTE_H__
