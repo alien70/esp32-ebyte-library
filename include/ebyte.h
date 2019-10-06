@@ -38,7 +38,7 @@
 #ifndef __EBYTE_H__
 #define __EBYTE_H__
 
-// #define _DEBUG
+#define _DEBUG
 
 #include "driver/uart.h"
 
@@ -303,6 +303,14 @@ uint8_t get_features();
 bool ebyte_init();
 
 /**
+ * @brief resets the 
+ * 
+ * @return true 
+ * @return false 
+ */
+bool ebyte_reset();
+
+/**
  * @brief Read version number
  * 
  * @return true 
@@ -317,6 +325,14 @@ bool read_version();
  * @return false 
  */
 bool read_parameters();
+
+/**
+ * @brief Write the new settings to the device
+ * 
+ * @return true 
+ * @return false 
+ */
+bool write_parameters();
 
 /**
  * @brief Wait delay in milliseconds
@@ -338,10 +354,12 @@ void complete_task(uint32_t);
 void print_version();
 
 /**
- * @brief Evaluates uart configuration structure
+ * @brief evaluates uart configuration
  * 
- * @return int 
+ * @param br UART Baud Rate
+ * @param p  Parity configuration
+ * @return uart_config_t 
  */
-uart_config_t eval_uart_config();
+uart_config_t eval_uart_config(uart_baud_rate_t br, parity_t p);
 
 #endif // #ifndef __EBYTE_H__

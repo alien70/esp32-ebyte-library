@@ -81,7 +81,17 @@ void set_mode(OperatingModes mode)
     gpio_set_level(_pin_configuration.m1_pin, (mode & 0x01));
 
     // waits until aux returns high or 1s
-    complete_task(1000);
+    complete_task(100);
+
+    return;
+
+    uart_config_t uart_config = (mode == PROGRAM)
+                                    ? eval_uart_config(_9600, _8N1)
+                                    : eval_uart_config(_baud_rate, _parity);
+
+    uart_param_config(_uart_port, &uart_config);
+    uart_set_pin(_uart_port, _pin_configuration.txd_pin, _pin_configuration.rxd_pin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    uart_driver_install(_uart_port, _rx_buffer_size * 2, _tx_buffer_size * 2, 0, NULL, 0);
 }
 
 parity_t get_parity()
@@ -128,12 +138,12 @@ uint8_t get_features()
 
 bool ebyte_init()
 {
-    uart_config_t uart_config = eval_uart_config();
-
     _rx_buffer_size = 128;
     _tx_buffer_size = 128;
 
+    uart_config_t uart_config = eval_uart_config(_baud_rate, _parity);
     uart_param_config(_uart_port, &uart_config);
+
     uart_set_pin(_uart_port, _pin_configuration.txd_pin, _pin_configuration.rxd_pin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     uart_driver_install(_uart_port, _rx_buffer_size * 2, _tx_buffer_size * 2, 0, NULL, 0);
 
@@ -142,6 +152,26 @@ bool ebyte_init()
 
     if (!read_parameters())
         return false;
+
+    return true;
+}
+
+bool ebyte_reset()
+{
+    set_mode(PROGRAM);
+
+    const char c = 0xC4;
+    uart_write_bytes(_uart_port, &c, 1);
+    uart_write_bytes(_uart_port, &c, 1);
+    uart_write_bytes(_uart_port, &c, 1);
+
+    set_mode(NORMAL);
+
+#ifdef _DEBUG
+    printf("===================\n");
+    printf("   Reset\n");
+    printf("===================\n");
+#endif
 
     return true;
 }
@@ -203,7 +233,7 @@ bool read_parameters()
         _save_on_power_down = false;
 
     // Address
-    memcpy(&_address, &_parameters[1], 2);
+    memcpy(&_address, &_parameters[1], sizeof(_address));
 
     // Parity           pp000000
     _parity = (_parameters[3] & 0xC0) >> 6;
@@ -248,6 +278,45 @@ bool read_parameters()
     return true;
 }
 
+bool write_parameters()
+{
+    memset(_parameters, 0, sizeof(_parameters));
+
+    set_mode(PROGRAM);
+
+    _parameters[0] = 0xC0;
+
+    // Address
+    memcpy(&_parameters[1], &_address, sizeof(_address));
+
+    // Parity           pp000000
+    // UART Baud Rate   00uuu000
+    // Air Data Rate    00000aaa
+    _parameters[3] =
+        (_parity << 6) | (_baud_rate << 3) | _air_data_rate;
+
+    _parameters[4] = _channel;
+    _parameters[5] = _option;
+
+    uart_write_bytes(_uart_port, (const char*) _parameters, sizeof(_parameters));
+
+#ifdef _DEBUG
+    printf("===================\n");
+    printf("  Write Parameters\n");
+    printf("===================\n");
+
+    for (int i = 0; i < 6; i++)
+    {
+        printf("p[%d] = %02x\n", i, _parameters[i]);
+    }
+    printf("===================\n");
+#endif
+
+    set_mode(NORMAL);
+
+    return true;
+}
+
 void vDelay(uint32_t delay)
 {
     vTaskDelay(delay / portTICK_PERIOD_MS);
@@ -279,21 +348,21 @@ void complete_task(uint32_t delay)
     vDelay(20);
 }
 
-uart_config_t eval_uart_config()
+uart_config_t eval_uart_config(uart_baud_rate_t br, parity_t p)
 {
     /* Configure parameters of an UART driver,
      * communication pins and install the driver */
-    int baud_rate = 1200 * (1 << _baud_rate);
-    if (_baud_rate == _57600)
+    int baud_rate = 1200 * (1 << br);
+    if (br == _57600)
         baud_rate = 57600;
-    else if (_baud_rate == _115200)
+    else if (br == _115200)
         baud_rate = 115200;
 
     uart_config_t uart_config = {
         .baud_rate = baud_rate,
         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE};
 
-    switch (_parity)
+    switch (p)
     {
     default:
     case _8N1:
