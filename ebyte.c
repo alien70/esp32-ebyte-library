@@ -6,7 +6,7 @@
 #include "freertos/task.h"
 #include "driver/gpio.h"
 
-#define LED (GPIO_NUM_2)
+#define LED (GPIO_NUM_4)
 
 // TODO: Eliminare dopo il primo test completo
 void dummy_task(void *argc)
